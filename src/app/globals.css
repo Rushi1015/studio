@@ -64,10 +64,27 @@
   }
 }
 
-.calculator-card {
-  @apply bg-card rounded-2xl shadow-lg border border-border p-6 transition-all duration-300 hover:shadow-xl;
+@layer components {
+  .calculator-card {
+    @apply bg-card rounded-2xl shadow-lg border border-border p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1;
+  }
+
+  .chart-container {
+    @apply rounded-xl bg-card border border-border p-4 shadow-sm transition-all duration-500;
+  }
+
+  .animate-stagger-1 { @apply animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both delay-75; }
+  .animate-stagger-2 { @apply animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both delay-150; }
+  .animate-stagger-3 { @apply animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both delay-200; }
+  .animate-stagger-4 { @apply animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both delay-300; }
 }
 
-.chart-container {
-  @apply rounded-xl bg-card border border-border p-4 shadow-sm;
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
 }
