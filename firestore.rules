@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * FIRESTORE SECURITY RULES DOCUMENTATION
+     * 
+     * Core Philosophy: 
+     * This ruleset enforces a strict User-Ownership model. Access to data is tied directly 
+     * to the user's Firebase Authentication UID, which is mirrored in the Firestore path structure.
+     * 
+     * Data Structure:
+     * - /users/{userId}: Top-level user profile documents.
+     * - /users/{userId}/sipCalculations/{sipId}: User-specific subcollection for financial data.
+     * 
+     * Key Security Decisions:
+     * 1. Path-Based Authorization: By using the {userId} wildcard in the path, we achieve high 
+     *    performance without calling get() on other documents.
+     * 2. Denormalization for Integrity: Relational fields (like userId) are stored within 
+     *    documents and validated against the path to ensure data consistency.
+     * 3. Prototyping Flexibility: Rules strictly control WHO can access data (Authorization) 
+     *    but remain flexible regarding the specific schema of the data (no type checks on content).
+     * 4. State Safety: Update and Delete operations require the document to exist (resource != null).
+     * 
+     * Structural Segregation:
+     * Private user data is nested under the specific user's path, preventing accidental 
+     * cross-user data exposure and simplifying list queries.
+     */
+
+    // --- Helper Functions ---
+
+    /** @description Checks if the request is from an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user matches the provided userId from the path. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks ownership and ensures the document exists for state-changing operations. */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the UserProfile entity. Users manage their own profiles.
+     * @path /users/{userId}
+     * @allow (create) if auth.uid == 'user123' and data.id == 'user123'
+     * @deny (create) if auth.uid == 'user123' and data.id == 'user456'
+     * @principle Enforces path-based ownership and self-creation validation.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for SIPCalculation. Secured via parent user ownership.
+       * @path /users/{userId}/sipCalculations/{sipCalculationId}
+       * @allow (list) if auth.uid == 'user123' for path /users/user123/sipCalculations
+       * @deny (get) if auth.uid == 'userABC' for path /users/userXYZ/sipCalculations/sip1
+       * @principle Relational integrity via denormalized userId field matching the path.
+       */
+      match /sipCalculations/{sipCalculationId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    // --- Default Deny ---
+    // Explicitly deny any access to paths not defined above.
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
