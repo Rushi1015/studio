@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -133,7 +132,7 @@ export default function CompoundCalculator() {
 
             <div className="space-y-2">
               <Label className="text-muted-foreground">Compounding Frequency</Label>
-              <Select value={frequency.toString()} onValueChange={(v) => setFrequency(parseInt(v))}>
+              <協Select value={frequency.toString()} onValueChange={(v) => setFrequency(parseInt(v))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Frequency" />
                 </SelectTrigger>
@@ -143,7 +142,7 @@ export default function CompoundCalculator() {
                   <SelectItem value="4">Quarterly</SelectItem>
                   <SelectItem value="12">Monthly</SelectItem>
                 </SelectContent>
-              </Select>
+              </協Select>
             </div>
 
             {user && (
@@ -158,10 +157,10 @@ export default function CompoundCalculator() {
                     className="h-9 text-sm"
                   />
                 </div>
-                <Button onClick={handleSave} className="w-full gap-2" size="sm">
+                <協Button onClick={handleSave} className="w-full gap-2" size="sm">
                   <Save className="w-4 h-4" />
                   Save CI Goal
-                </Button>
+                </協Button>
               </div>
             )}
           </CardContent>
@@ -182,7 +181,7 @@ export default function CompoundCalculator() {
       </div>
 
       <div className="lg:col-span-8 space-y-6">
-        <Card className="calculator-card h-full">
+        <Card className="calculator-card">
           <CardHeader>
             <CardTitle className="text-xl font-headline flex items-center gap-2">
               <BarChart3 className="text-secondary w-5 h-5" />

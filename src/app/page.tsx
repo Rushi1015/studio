@@ -10,7 +10,7 @@ import { LineChart, BarChart2, Calculator, ShieldCheck, TrendingUp, Wallet, Hand
 
 export default function Home() {
   return (
-    <div className="min-h-screen pb-12 overflow-x-hidden">
+    <div className="min-h-screen pb-12 overflow-x-hidden flex flex-col">
       {/* Header */}
       <header className="bg-card border-b border-border py-6 px-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -29,7 +29,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4">
+      <main className="max-w-7xl mx-auto px-4 flex-grow w-full">
         {/* Intro Section */}
         <section className="mb-12 text-center md:text-left animate-in fade-in slide-in-from-left-8 duration-1000">
           <h2 className="text-3xl md:text-5xl font-extrabold font-headline mb-6 tracking-tight">
@@ -61,7 +61,7 @@ export default function Home() {
         </section>
 
         {/* Tabbed Calculators */}
-        <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+        <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 mb-20">
           <Tabs defaultValue="sip" className="space-y-8">
             <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex bg-muted/50 p-1 rounded-xl">
               <TabsTrigger value="sip" className="flex items-center gap-2 px-6 py-3 transition-all duration-300 rounded-lg">
@@ -81,20 +81,20 @@ export default function Home() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="sip" className="focus-visible:outline-none">
+            <TabsContent value="sip" className="focus-visible:outline-none pb-8">
               <SipCalculator />
             </TabsContent>
-            <TabsContent value="swp" className="focus-visible:outline-none">
+            <TabsContent value="swp" className="focus-visible:outline-none pb-8">
               <SwpCalculator />
             </TabsContent>
-            <TabsContent value="compound" className="focus-visible:outline-none">
+            <TabsContent value="compound" className="focus-visible:outline-none pb-8">
               <CompoundCalculator />
             </TabsContent>
           </Tabs>
         </div>
 
         {/* Features / Information Section */}
-        <section className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <section className="mt-24 mb-24 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-8 bg-card rounded-2xl border border-border transition-all duration-500 hover:shadow-xl hover:-translate-y-2 animate-stagger-1">
             <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 float-animation">
               <LineChart className="text-primary w-6 h-6" />
@@ -125,7 +125,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="mt-20 border-t border-border pt-12 pb-8 animate-in fade-in duration-1000">
+      <footer className="mt-auto border-t border-border pt-12 pb-8 animate-in fade-in duration-1000">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} FinSim Studio. All calculations are illustrative and based on constant parameters.

@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -182,7 +181,7 @@ export default function SwpCalculator() {
       </div>
 
       <div className="lg:col-span-8 space-y-6">
-        <Card className="calculator-card h-full animate-stagger-3">
+        <Card className="calculator-card animate-stagger-3">
           <CardHeader>
             <CardTitle className="text-xl font-headline flex items-center gap-2">
               <ChartBarIncreasing className="text-primary w-5 h-5" />
