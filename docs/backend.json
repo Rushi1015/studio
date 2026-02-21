@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -47,54 +48,34 @@
       "description": "Stores the parameters and results of a user's Systematic Investment Plan (SIP) calculation.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the SIPCalculation entity."
+          "type": "string"
         },
         "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile that owns this SIP calculation. (Relationship: UserProfile 1:N SIPCalculation)"
+          "type": "string"
         },
         "name": {
-          "type": "string",
-          "description": "A user-defined name or label for this saved SIP calculation."
+          "type": "string"
         },
         "monthlyInvestment": {
-          "type": "number",
-          "description": "The monthly investment amount for the SIP."
+          "type": "number"
         },
         "investmentDurationYears": {
-          "type": "number",
-          "description": "The total duration of the SIP in years."
+          "type": "number"
         },
         "expectedReturnRate": {
-          "type": "number",
-          "description": "The expected annual rate of return for the investment, expressed as a decimal (e.g., 0.12 for 12%)."
-        },
-        "calculationDate": {
-          "type": "string",
-          "description": "The date when this SIP calculation was performed or saved.",
-          "format": "date-time"
+          "type": "number"
         },
         "totalInvestedAmount": {
-          "type": "number",
-          "description": "The total principal amount invested over the SIP duration."
+          "type": "number"
         },
         "totalInterestEarned": {
-          "type": "number",
-          "description": "The total interest earned on the SIP over its duration."
+          "type": "number"
         },
         "finalValue": {
-          "type": "number",
-          "description": "The projected final value of the investment at the end of the SIP duration."
+          "type": "number"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the SIP calculation was created/saved.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the SIP calculation was last updated.",
           "format": "date-time"
         }
       },
@@ -105,19 +86,48 @@
         "monthlyInvestment",
         "investmentDurationYears",
         "expectedReturnRate",
-        "calculationDate",
-        "totalInvestedAmount",
-        "totalInterestEarned",
         "finalValue",
         "createdAt"
       ]
+    },
+    "SWPCalculation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SWPCalculation",
+      "type": "object",
+      "description": "Stores a user's Systematic Withdrawal Plan (SWP) calculation.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "initialInvestment": { "type": "number" },
+        "monthlyWithdrawal": { "type": "number" },
+        "years": { "type": "number" },
+        "expectedReturnRate": { "type": "number" },
+        "totalWithdrawn": { "type": "number" },
+        "finalBalance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "initialInvestment", "monthlyWithdrawal", "years", "expectedReturnRate", "finalBalance", "createdAt"]
+    },
+    "CompoundCalculation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CompoundCalculation",
+      "type": "object",
+      "description": "Stores a user's Compound Interest calculation.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "principal": { "type": "number" },
+        "rate": { "type": "number" },
+        "years": { "type": "number" },
+        "frequency": { "type": "number" },
+        "totalInterest": { "type": "number" },
+        "totalValue": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "principal", "rate", "years", "frequency", "totalValue", "createdAt"]
     }
-  },
-  "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
   },
   "firestore": {
     "structure": [
@@ -125,39 +135,30 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores individual user profiles. The document ID `{userId}` MUST match the Firebase Authentication UID (`request.auth.uid`). This provides direct, path-based ownership for authorization.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, matching their Firebase Authentication UID."
-            }
-          ]
+          "description": "User profile document."
         }
       },
       {
-        "path": "/users/{userId}/sipCalculations/{sipCalculationId}",
+        "path": "/users/{userId}/sipCalculations/{id}",
         "definition": {
           "entityName": "SIPCalculation",
-          "schema": {
-            "$ref": "#/backend/entities/SIPCalculation"
-          },
-          "description": "A subcollection storing Systematic Investment Plan (SIP) calculations for a specific user. The `userId` field within each SIPCalculation document is denormalized and MUST match the `{userId}` in the path for robust authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this SIP calculation, matching their Firebase Authentication UID."
-            },
-            {
-              "name": "sipCalculationId",
-              "description": "The unique identifier for a specific SIP calculation document."
-            }
-          ]
+          "description": "Subcollection for SIP calculations."
+        }
+      },
+      {
+        "path": "/users/{userId}/swpCalculations/{id}",
+        "definition": {
+          "entityName": "SWPCalculation",
+          "description": "Subcollection for SWP calculations."
+        }
+      },
+      {
+        "path": "/users/{userId}/compoundCalculations/{id}",
+        "definition": {
+          "entityName": "CompoundCalculation",
+          "description": "Subcollection for Compound Interest calculations."
         }
       }
-    ],
-    "reasoning": "The proposed Firestore structure prioritizes Authorization Independence and secure List (QAP) operations by leveraging path-based ownership and denormalization. \n\n1.  **User Profiles (`/users/{userId}`):** Each user's profile is stored as a document in the top-level `users` collection, with the document ID matching the Firebase Authentication `uid` (`request.auth.uid`). This directly links the authenticated user to their profile without any `get()` operations in security rules. Authorization becomes a simple `request.auth.uid == userId`, ensuring full Authorization Independence.\n\n2.  **SIP Calculations (`/users/{userId}/sipCalculations/{sipCalculationId}`):** Each SIP calculation is stored as a subcollection document under the owning user's profile. The SIPCalculation entity's `userId` field is explicitly denormalized; it stores the ID of the parent user. This denormalization is critical for Authorization Independence. Security rules can check `request.auth.uid == userId` (from the path wildcard) AND `request.auth.uid == resource.data.userId` without needing to `get()` the parent user document or any other document. This allows for atomic writes/updates to SIP calculations and simplifies rule logic considerably.\n\n**Support for QAPs (Rules are not Filters):**\n*   **User Profiles:** Listing operations on `/users` will inherently be restricted by `request.auth.uid == userId`, meaning users can only list (and effectively read) their own profile document. There's no scenario where a user can list all user profiles unless explicitly granted via a role (which would be in a separate, secure collection like `/roles_admin/{uid}`).\n*   **SIP Calculations:** By nesting SIP calculations under `/users/{userId}/sipCalculations`, any `list` operation is automatically scoped to a specific user. A user can only query their own SIP calculations (e.g., `db.collection('users').doc(request.auth.uid).collection('sipCalculations')`). The security rules enforce `allow list: if request.auth.uid == userId;`, guaranteeing that no user can inadvertently or maliciously list SIP calculations belonging to other users. This structure naturally prevents unauthorized cross-user data exposure during list operations, fulfilling the QAP principle."
+    ]
   }
 }

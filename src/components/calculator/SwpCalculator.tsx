@@ -1,21 +1,78 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { calculateSWP, formatCurrency } from "@/lib/calculator-utils";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { HandCoins, ChartBarIncreasing, Info } from "lucide-react";
+import { HandCoins, ChartBarIncreasing, Info, Save, History, Trash2, Calendar } from "lucide-react";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SwpCalculator() {
   const [initial, setInitial] = useState(500000);
   const [withdrawal, setWithdrawal] = useState(5000);
   const [years, setYears] = useState(10);
   const [returns, setReturns] = useState(12);
+  const [saveName, setSaveName] = useState("");
+
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
 
   const result = useMemo(() => calculateSWP(initial, withdrawal, years, returns), [initial, withdrawal, years, returns]);
+
+  const savedCalculationsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, 'users', user.uid, 'swpCalculations');
+  }, [db, user]);
+
+  const { data: savedCalculations } = useCollection(savedCalculationsQuery);
+
+  const handleSave = () => {
+    if (!user || !db) return;
+    
+    const name = saveName || `SWP: ${formatCurrency(withdrawal)}/mo`;
+    const payload = {
+      userId: user.uid,
+      name,
+      initialInvestment: initial,
+      monthlyWithdrawal: withdrawal,
+      years,
+      expectedReturnRate: returns / 100,
+      totalWithdrawn: result.totalWithdrawn,
+      finalBalance: result.finalBalance,
+      createdAt: new Date().toISOString(),
+    };
+
+    const colRef = collection(db, 'users', user.uid, 'swpCalculations');
+    addDocumentNonBlocking(colRef, payload);
+    
+    setSaveName("");
+    toast({
+      title: "SWP Plan Saved",
+      description: `"${name}" has been added to your collections.`,
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!user || !db) return;
+    const docRef = doc(db, 'users', user.uid, 'swpCalculations', id);
+    deleteDocumentNonBlocking(docRef);
+  };
+
+  const loadSaved = (calc: any) => {
+    setInitial(calc.initialInvestment);
+    setWithdrawal(calc.monthlyWithdrawal);
+    setYears(calc.years);
+    setReturns(calc.expectedReturnRate * 100);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
@@ -87,6 +144,25 @@ export default function SwpCalculator() {
                 className="py-4"
               />
             </div>
+
+            {user && (
+              <div className="pt-4 border-t border-border space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="swp-save-name" className="text-xs uppercase tracking-wider text-muted-foreground">Save as</Label>
+                  <Input 
+                    id="swp-save-name"
+                    placeholder="E.g. Monthly Pension" 
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <Button onClick={handleSave} className="w-full gap-2" size="sm">
+                  <Save className="w-4 h-4" />
+                  Save SWP Plan
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -150,10 +226,48 @@ export default function SwpCalculator() {
             </ChartContainer>
             <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg animate-in fade-in duration-1000 delay-700">
               <Info className="w-4 h-4 text-primary" />
-              <span>Note: This is an estimated projection based on constant returns. Actual returns may vary in equity markets.</span>
+              <span>Note: This is an estimated projection based on constant returns. Actual returns may vary.</span>
             </div>
           </CardContent>
         </Card>
+
+        {user && savedCalculations && savedCalculations.length > 0 && (
+          <Card className="calculator-card animate-stagger-4">
+            <CardHeader>
+              <CardTitle className="text-lg font-headline flex items-center gap-2">
+                <History className="text-primary w-5 h-5" />
+                Saved SWP Plans
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {savedCalculations.map((calc: any) => (
+                  <div key={calc.id} className="group p-4 rounded-xl border border-border bg-muted/20 hover:bg-card transition-all cursor-pointer flex justify-between items-center" onClick={() => loadSaved(calc)}>
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm truncate max-w-[150px]">{calc.name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-tight">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(calc.createdAt).toLocaleDateString()}
+                      </div>
+                      <p className="text-xs font-medium text-primary">Balance: {formatCurrency(calc.finalBalance)}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(calc.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

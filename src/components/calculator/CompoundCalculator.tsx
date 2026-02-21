@@ -1,22 +1,79 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { calculateCompoundInterest, formatCurrency } from "@/lib/calculator-utils";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Calculator, BarChart3, Banknote } from "lucide-react";
+import { Calculator, BarChart3, Save, History, Trash2, Calendar } from "lucide-react";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CompoundCalculator() {
   const [principal, setPrincipal] = useState(100000);
   const [rate, setRate] = useState(8);
   const [years, setYears] = useState(10);
   const [frequency, setFrequency] = useState(1);
+  const [saveName, setSaveName] = useState("");
+
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
 
   const result = useMemo(() => calculateCompoundInterest(principal, rate, years, frequency), [principal, rate, years, frequency]);
+
+  const savedCalculationsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, 'users', user.uid, 'compoundCalculations');
+  }, [db, user]);
+
+  const { data: savedCalculations } = useCollection(savedCalculationsQuery);
+
+  const handleSave = () => {
+    if (!user || !db) return;
+    
+    const name = saveName || `CI: ${formatCurrency(principal)} for ${years}y`;
+    const payload = {
+      userId: user.uid,
+      name,
+      principal,
+      rate,
+      years,
+      frequency,
+      totalInterest: result.totalInterest,
+      totalValue: result.totalValue,
+      createdAt: new Date().toISOString(),
+    };
+
+    const colRef = collection(db, 'users', user.uid, 'compoundCalculations');
+    addDocumentNonBlocking(colRef, payload);
+    
+    setSaveName("");
+    toast({
+      title: "CI Projection Saved",
+      description: `"${name}" has been added to your collections.`,
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!user || !db) return;
+    const docRef = doc(db, 'users', user.uid, 'compoundCalculations', id);
+    deleteDocumentNonBlocking(docRef);
+  };
+
+  const loadSaved = (calc: any) => {
+    setPrincipal(calc.principal);
+    setRate(calc.rate);
+    setYears(calc.years);
+    setFrequency(calc.frequency);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -88,6 +145,25 @@ export default function CompoundCalculator() {
                 </SelectContent>
               </Select>
             </div>
+
+            {user && (
+              <div className="pt-4 border-t border-border space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ci-save-name" className="text-xs uppercase tracking-wider text-muted-foreground">Label</Label>
+                  <Input 
+                    id="ci-save-name"
+                    placeholder="E.g. FD Growth" 
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <Button onClick={handleSave} className="w-full gap-2" size="sm">
+                  <Save className="w-4 h-4" />
+                  Save CI Goal
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -125,14 +201,52 @@ export default function CompoundCalculator() {
                   <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
                   <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="wealth" stackId="b" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" radius={[0, 0, 0, 0]} isAnimationActive={true} />
+                  <Bar dataKey="wealth" stackId="b" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} isAnimationActive={true} />
                   <Legend verticalAlign="top" height={36}/>
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
+
+        {user && savedCalculations && savedCalculations.length > 0 && (
+          <Card className="calculator-card animate-stagger-4">
+            <CardHeader>
+              <CardTitle className="text-lg font-headline flex items-center gap-2">
+                <History className="text-primary w-5 h-5" />
+                Saved CI Projections
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {savedCalculations.map((calc: any) => (
+                  <div key={calc.id} className="group p-4 rounded-xl border border-border bg-muted/20 hover:bg-card transition-all cursor-pointer flex justify-between items-center" onClick={() => loadSaved(calc)}>
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm truncate max-w-[150px]">{calc.name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-tight">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(calc.createdAt).toLocaleDateString()}
+                      </div>
+                      <p className="text-xs font-medium text-primary">Value: {formatCurrency(calc.totalValue)}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(calc.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
