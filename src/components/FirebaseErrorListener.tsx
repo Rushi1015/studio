@@ -3,37 +3,43 @@
 import { useState, useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useToast } from "@/hooks/use-toast";
 
 /**
- * An invisible component that listens for globally emitted 'permission-error' events.
- * It throws any received error to be caught by Next.js's global-error.tsx.
+ * An invisible component that listens for globally emitted error events.
+ * It handles permission errors by throwing them (to be caught by Next.js overlay)
+ * and authentication errors by displaying a toast notification.
  */
 export function FirebaseErrorListener() {
-  // Use the specific error type for the state for type safety.
-  const [error, setError] = useState<FirestorePermissionError | null>(null);
+  const [permissionError, setPermissionError] = useState<FirestorePermissionError | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // The callback now expects a strongly-typed error, matching the event payload.
-    const handleError = (error: FirestorePermissionError) => {
-      // Set error in state to trigger a re-render.
-      setError(error);
+    const handlePermissionError = (error: FirestorePermissionError) => {
+      setPermissionError(error);
     };
 
-    // The typed emitter will enforce that the callback for 'permission-error'
-    // matches the expected payload type (FirestorePermissionError).
-    errorEmitter.on('permission-error', handleError);
+    const handleAuthError = (error: { message: string; code?: string }) => {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: error.message || "An unexpected error occurred during authentication.",
+      });
+    };
 
-    // Unsubscribe on unmount to prevent memory leaks.
+    errorEmitter.on('permission-error', handlePermissionError);
+    errorEmitter.on('auth-error', handleAuthError);
+
     return () => {
-      errorEmitter.off('permission-error', handleError);
+      errorEmitter.off('permission-error', handlePermissionError);
+      errorEmitter.off('auth-error', handleAuthError);
     };
-  }, []);
+  }, [toast]);
 
-  // On re-render, if an error exists in state, throw it.
-  if (error) {
-    throw error;
+  // For Firestore permission errors, we throw to trigger the agentive error loop.
+  if (permissionError) {
+    throw permissionError;
   }
 
-  // This component renders nothing.
   return null;
 }
