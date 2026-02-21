@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SipCalculator from "@/components/calculator/SipCalculator";
 import SwpCalculator from "@/components/calculator/SwpCalculator";
 import CompoundCalculator from "@/components/calculator/CompoundCalculator";
-import { LineChart, BarChart2, Calculator, ShieldCheck } from "lucide-react";
+import { LineChart, BarChart2, Calculator, ShieldCheck, TrendingUp, Wallet, HandCoins, Info } from "lucide-react";
 
 export default function Home() {
   return (
@@ -44,15 +44,30 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4">
         {/* Intro Section */}
         <section className="mb-12 text-center md:text-left animate-in fade-in slide-in-from-left-8 duration-1000">
-          <h2 className="text-3xl md:text-4xl font-bold font-headline mb-4">
+          <h2 className="text-3xl md:text-5xl font-extrabold font-headline mb-6 tracking-tight">
             Master Your <span className="text-primary relative inline-block">
               Financial Future
-              <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 100 10" preserveAspectRatio="none">
-                <path d="M0,5 Q50,0 100,5" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" className="animate-in slide-in-from-left duration-1000 delay-500" />
+              <svg className="absolute -bottom-3 left-0 w-full h-3 overflow-visible" viewBox="0 0 100 12" preserveAspectRatio="none">
+                <path 
+                  d="M2,10 C25,2 75,2 98,10" 
+                  stroke="currentColor" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round" 
+                  fill="none" 
+                  className="text-primary/40 animate-in slide-in-from-left duration-1000 delay-500 fill-mode-both"
+                />
+                <path 
+                  d="M5,8 C30,3 70,3 95,8" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  fill="none" 
+                  className="text-primary animate-in slide-in-from-left duration-1000 delay-700 fill-mode-both"
+                />
               </svg>
             </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl text-lg animate-in fade-in duration-1000 delay-300">
+          <p className="text-muted-foreground max-w-2xl text-lg animate-in fade-in duration-1000 delay-300 leading-relaxed">
             Experience professional-grade financial modeling. Simulate SIPs, plan withdrawals, and explore the exponential magic of compound interest with real-time interactive charts.
           </p>
         </section>
@@ -61,17 +76,17 @@ export default function Home() {
         <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
           <Tabs defaultValue="sip" className="space-y-8">
             <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex bg-muted/50 p-1 rounded-xl">
-              <TabsTrigger value="sip" className="flex items-center gap-2 px-6 py-3 transition-all duration-300">
-                <LineChart className="w-4 h-4" />
+              <TabsTrigger value="sip" className="flex items-center gap-2 px-6 py-3 transition-all duration-300 rounded-lg">
+                <TrendingUp className="w-4 h-4" />
                 <span className="hidden sm:inline">SIP Calculator</span>
                 <span className="sm:hidden">SIP</span>
               </TabsTrigger>
-              <TabsTrigger value="swp" className="flex items-center gap-2 px-6 py-3 transition-all duration-300">
-                <BarChart2 className="w-4 h-4" />
+              <TabsTrigger value="swp" className="flex items-center gap-2 px-6 py-3 transition-all duration-300 rounded-lg">
+                <HandCoins className="w-4 h-4" />
                 <span className="hidden sm:inline">SWP Calculator</span>
                 <span className="sm:hidden">SWP</span>
               </TabsTrigger>
-              <TabsTrigger value="compound" className="flex items-center gap-2 px-6 py-3 transition-all duration-300">
+              <TabsTrigger value="compound" className="flex items-center gap-2 px-6 py-3 transition-all duration-300 rounded-lg">
                 <Calculator className="w-4 h-4" />
                 <span className="hidden sm:inline">Compound Interest</span>
                 <span className="sm:hidden">CI</span>
