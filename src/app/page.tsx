@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SipCalculator from "@/components/calculator/SipCalculator";
 import SwpCalculator from "@/components/calculator/SwpCalculator";
 import CompoundCalculator from "@/components/calculator/CompoundCalculator";
+import AuthDialog from "@/components/auth/AuthDialog";
 import { LineChart, BarChart2, Calculator, ShieldCheck, TrendingUp, Wallet, HandCoins, Info } from "lucide-react";
 
 export default function Home() {
@@ -23,20 +24,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground">
-              <ShieldCheck className="w-4 h-4 text-secondary animate-pulse" />
-              <span>Precise Calculations</span>
-            </div>
-            <nav className="flex items-center gap-4">
-              <a href="#" className="text-sm font-medium hover:text-primary transition-colors relative group">
-                Documentation
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-              </a>
-              <a href="#" className="text-sm font-medium hover:text-primary transition-colors relative group">
-                Resources
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-              </a>
-            </nav>
+            <AuthDialog />
           </div>
         </div>
       </header>

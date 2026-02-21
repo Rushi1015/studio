@@ -4,18 +4,73 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { calculateSIP, formatCurrency } from "@/lib/calculator-utils";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { TrendingUp, Wallet } from "lucide-react";
+import { TrendingUp, Wallet, Save, History, Trash2, Calendar } from "lucide-react";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SipCalculator() {
   const [amount, setAmount] = useState(5000);
   const [years, setYears] = useState(10);
   const [returns, setReturns] = useState(12);
+  const [saveName, setSaveName] = useState("");
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
 
   const result = useMemo(() => calculateSIP(amount, years, returns), [amount, years, returns]);
+
+  const savedCalculationsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, 'users', user.uid, 'sipCalculations');
+  }, [db, user]);
+
+  const { data: savedCalculations } = useCollection(savedCalculationsQuery);
+
+  const handleSave = () => {
+    if (!user || !db) return;
+    
+    const name = saveName || `Plan for ${years}y at ${returns}%`;
+    const payload = {
+      userId: user.uid,
+      name,
+      monthlyInvestment: amount,
+      investmentDurationYears: years,
+      expectedReturnRate: returns / 100,
+      calculationDate: new Date().toISOString(),
+      totalInvestedAmount: result.totalInvestment,
+      totalInterestEarned: result.estimatedReturns,
+      finalValue: result.totalValue,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const colRef = collection(db, 'users', user.uid, 'sipCalculations');
+    addDocumentNonBlocking(colRef, payload);
+    
+    setSaveName("");
+    toast({
+      title: "Calculation Saved",
+      description: `"${name}" has been saved to your profile.`,
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!user || !db) return;
+    const docRef = doc(db, 'users', user.uid, 'sipCalculations', id);
+    deleteDocumentNonBlocking(docRef);
+  };
+
+  const loadSaved = (calc: any) => {
+    setAmount(calc.monthlyInvestment);
+    setYears(calc.investmentDurationYears);
+    setReturns(calc.expectedReturnRate * 100);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
@@ -78,6 +133,25 @@ export default function SipCalculator() {
                 className="py-4"
               />
             </div>
+
+            {user && (
+              <div className="pt-4 border-t border-border space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="save-name" className="text-xs uppercase tracking-wider text-muted-foreground">Plan Name (Optional)</Label>
+                  <Input 
+                    id="save-name"
+                    placeholder="E.g. Retirement Goal" 
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <Button onClick={handleSave} className="w-full gap-2" size="sm">
+                  <Save className="w-4 h-4" />
+                  Save Projection
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -101,15 +175,15 @@ export default function SipCalculator() {
       </div>
 
       <div className="lg:col-span-8 space-y-6">
-        <Card className="calculator-card h-full animate-stagger-3">
+        <Card className="calculator-card animate-stagger-3">
           <CardHeader>
             <CardTitle className="text-xl font-headline flex items-center gap-2">
-              <TrendingUp className="text-secondary w-5 h-5 animate-bounce" style={{ animationDuration: '3s' }} />
+              <TrendingUp className="text-secondary w-5 h-5" />
               Wealth Projection
             </CardTitle>
             <CardDescription>Visualizing your wealth growth over {years} years</CardDescription>
           </CardHeader>
-          <CardContent className="h-[400px]">
+          <CardContent className="h-[350px]">
             <ChartContainer config={{
               wealth: { label: "Total Wealth", color: "hsl(var(--primary))" },
               investment: { label: "Total Investment", color: "hsl(var(--secondary))" }
@@ -155,6 +229,44 @@ export default function SipCalculator() {
             </ChartContainer>
           </CardContent>
         </Card>
+
+        {user && savedCalculations && savedCalculations.length > 0 && (
+          <Card className="calculator-card animate-stagger-4">
+            <CardHeader>
+              <CardTitle className="text-lg font-headline flex items-center gap-2">
+                <History className="text-primary w-5 h-5" />
+                Saved Projections
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {savedCalculations.map((calc: any) => (
+                  <div key={calc.id} className="group p-4 rounded-xl border border-border bg-muted/20 hover:bg-card transition-all cursor-pointer flex justify-between items-center" onClick={() => loadSaved(calc)}>
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm truncate max-w-[150px]">{calc.name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-tight">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(calc.createdAt).toLocaleDateString()}
+                      </div>
+                      <p className="text-xs font-medium text-primary">{formatCurrency(calc.finalValue)}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(calc.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
