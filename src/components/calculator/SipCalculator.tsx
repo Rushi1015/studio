@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -11,19 +12,23 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } fro
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { TrendingUp, Wallet, Save, History, Trash2, Calendar } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SipCalculator() {
-  const [amount, setAmount] = useState(5000);
-  const [years, setYears] = useState(10);
-  const [returns, setReturns] = useState(12);
+  const [amount, setAmount] = useState<number | string>(5000);
+  const [years, setYears] = useState<number | string>(10);
+  const [returns, setReturns] = useState<number | string>(12);
   const [saveName, setSaveName] = useState("");
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
-  const result = useMemo(() => calculateSIP(amount, years, returns), [amount, years, returns]);
+  const numericAmount = Number(amount) || 0;
+  const numericYears = Number(years) || 0;
+  const numericReturns = Number(returns) || 0;
+
+  const result = useMemo(() => calculateSIP(numericAmount, numericYears, numericReturns), [numericAmount, numericYears, numericReturns]);
 
   const savedCalculationsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -35,19 +40,17 @@ export default function SipCalculator() {
   const handleSave = () => {
     if (!user || !db) return;
     
-    const name = saveName || `Plan for ${years}y at ${returns}%`;
+    const name = saveName || `Plan for ${numericYears}y at ${numericReturns}%`;
     const payload = {
       userId: user.uid,
       name,
-      monthlyInvestment: amount,
-      investmentDurationYears: years,
-      expectedReturnRate: returns / 100,
-      calculationDate: new Date().toISOString(),
+      monthlyInvestment: numericAmount,
+      investmentDurationYears: numericYears,
+      expectedReturnRate: numericReturns / 100,
       totalInvestedAmount: result.totalInvestment,
       totalInterestEarned: result.estimatedReturns,
       finalValue: result.totalValue,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     const colRef = collection(db, 'users', user.uid, 'sipCalculations');
@@ -86,10 +89,10 @@ export default function SipCalculator() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Monthly Investment</Label>
-                <span className="font-bold text-primary tabular-nums">{formatCurrency(amount)}</span>
+                <span className="font-bold text-primary tabular-nums">{formatCurrency(numericAmount)}</span>
               </div>
               <Slider
-                value={[amount]}
+                value={[numericAmount]}
                 min={500}
                 max={100000}
                 step={500}
@@ -99,38 +102,65 @@ export default function SipCalculator() {
               <Input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
+                onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={() => {
+                  if (amount === "" || Number(amount) < 500) setAmount(500);
+                  if (Number(amount) > 1000000) setAmount(1000000);
+                }}
                 className="mt-2 transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="Enter amount"
               />
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Investment Period (Years)</Label>
-                <span className="font-bold text-primary tabular-nums">{years} yr</span>
+                <span className="font-bold text-primary tabular-nums">{numericYears} yr</span>
               </div>
               <Slider
-                value={[years]}
+                value={[numericYears]}
                 min={1}
                 max={30}
                 step={1}
                 onValueChange={(v) => setYears(v[0])}
                 className="py-4"
               />
+              <Input
+                type="number"
+                value={years}
+                onChange={(e) => setYears(e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={() => {
+                  if (years === "" || Number(years) < 1) setYears(1);
+                  if (Number(years) > 50) setYears(50);
+                }}
+                className="mt-2 transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="Enter years"
+              />
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Expected Return Rate (% p.a)</Label>
-                <span className="font-bold text-primary tabular-nums">{returns}%</span>
+                <span className="font-bold text-primary tabular-nums">{numericReturns}%</span>
               </div>
               <Slider
-                value={[returns]}
+                value={[numericReturns]}
                 min={1}
                 max={30}
                 step={0.5}
                 onValueChange={(v) => setReturns(v[0])}
                 className="py-4"
+              />
+              <Input
+                type="number"
+                value={returns}
+                onChange={(e) => setReturns(e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={() => {
+                  if (returns === "" || Number(returns) < 1) setReturns(1);
+                  if (Number(returns) > 50) setReturns(50);
+                }}
+                className="mt-2 transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="Enter returns"
               />
             </div>
 
@@ -181,7 +211,7 @@ export default function SipCalculator() {
               <TrendingUp className="text-secondary w-5 h-5" />
               Wealth Projection
             </CardTitle>
-            <CardDescription>Visualizing your wealth growth over {years} years</CardDescription>
+            <CardDescription>Visualizing your wealth growth over {numericYears} years</CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
             <ChartContainer config={{

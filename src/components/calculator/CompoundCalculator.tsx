@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -16,9 +17,9 @@ import { collection, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CompoundCalculator() {
-  const [principal, setPrincipal] = useState(100000);
-  const [rate, setRate] = useState(8);
-  const [years, setYears] = useState(10);
+  const [principal, setPrincipal] = useState<number | string>(100000);
+  const [rate, setRate] = useState<number | string>(8);
+  const [years, setYears] = useState<number | string>(10);
   const [frequency, setFrequency] = useState(1);
   const [saveName, setSaveName] = useState("");
 
@@ -26,7 +27,11 @@ export default function CompoundCalculator() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const result = useMemo(() => calculateCompoundInterest(principal, rate, years, frequency), [principal, rate, years, frequency]);
+  const numericPrincipal = Number(principal) || 0;
+  const numericRate = Number(rate) || 0;
+  const numericYears = Number(years) || 0;
+
+  const result = useMemo(() => calculateCompoundInterest(numericPrincipal, numericRate, numericYears, frequency), [numericPrincipal, numericRate, numericYears, frequency]);
 
   const savedCalculationsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -38,13 +43,13 @@ export default function CompoundCalculator() {
   const handleSave = () => {
     if (!user || !db) return;
     
-    const name = saveName || `CI: ${formatCurrency(principal)} for ${years}y`;
+    const name = saveName || `CI: ${formatCurrency(numericPrincipal)} for ${numericYears}y`;
     const payload = {
       userId: user.uid,
       name,
-      principal,
-      rate,
-      years,
+      principal: numericPrincipal,
+      rate: numericRate,
+      years: numericYears,
       frequency,
       totalInterest: result.totalInterest,
       totalValue: result.totalValue,
@@ -88,45 +93,78 @@ export default function CompoundCalculator() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Initial Principal</Label>
-                <span className="font-bold text-primary">{formatCurrency(principal)}</span>
+                <span className="font-bold text-primary">{formatCurrency(numericPrincipal)}</span>
               </div>
               <Slider
-                value={[principal]}
+                value={[numericPrincipal]}
                 min={1000}
                 max={5000000}
                 step={1000}
                 onValueChange={(v) => setPrincipal(v[0])}
                 className="py-4"
               />
+              <Input
+                type="number"
+                value={principal}
+                onChange={(e) => setPrincipal(e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={() => {
+                  if (principal === "" || Number(principal) < 1000) setPrincipal(1000);
+                  if (Number(principal) > 100000000) setPrincipal(100000000);
+                }}
+                className="mt-2 text-sm"
+                placeholder="Initial amount"
+              />
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Interest Rate (% p.a)</Label>
-                <span className="font-bold text-primary">{rate}%</span>
+                <span className="font-bold text-primary">{numericRate}%</span>
               </div>
               <Slider
-                value={[rate]}
+                value={[numericRate]}
                 min={0.5}
                 max={50}
                 step={0.5}
                 onValueChange={(v) => setRate(v[0])}
                 className="py-4"
               />
+              <Input
+                type="number"
+                value={rate}
+                onChange={(e) => setRate(e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={() => {
+                  if (rate === "" || Number(rate) < 0.1) setRate(0.1);
+                  if (Number(rate) > 100) setRate(100);
+                }}
+                className="mt-2 text-sm"
+                placeholder="Interest rate"
+              />
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Duration (Years)</Label>
-                <span className="font-bold text-primary">{years} yr</span>
+                <span className="font-bold text-primary">{numericYears} yr</span>
               </div>
               <Slider
-                value={[years]}
+                value={[numericYears]}
                 min={1}
                 max={50}
                 step={1}
                 onValueChange={(v) => setYears(v[0])}
                 className="py-4"
+              />
+              <Input
+                type="number"
+                value={years}
+                onChange={(e) => setYears(e.target.value === "" ? "" : Number(e.target.value))}
+                onBlur={() => {
+                  if (years === "" || Number(years) < 1) setYears(1);
+                  if (Number(years) > 100) setYears(100);
+                }}
+                className="mt-2 text-sm"
+                placeholder="Years"
               />
             </div>
 
