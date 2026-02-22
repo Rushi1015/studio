@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { calculateSWP, formatCurrency } from "@/lib/calculator-utils";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { HandCoins, ChartBarIncreasing, Info, Save, History, Trash2, Calendar } from "lucide-react";
+import { HandCoins, ChartBarIncreasing, Save, History, Trash2, Calendar } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -273,10 +272,6 @@ export default function SwpCalculator() {
                 </AreaChart>
               </ResponsiveContainer>
             </ChartContainer>
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg animate-in fade-in duration-1000 delay-700">
-              <Info className="w-4 h-4 text-primary" />
-              <span>Note: This is an estimated projection based on constant returns. Actual returns may vary.</span>
-            </div>
           </CardContent>
         </Card>
 
