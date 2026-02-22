@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -10,7 +11,7 @@ import { LineChart, BarChart2, Calculator, TrendingUp, HandCoins } from "lucide-
 
 export default function Home() {
   return (
-    <div className="min-h-screen pb-12 overflow-x-hidden flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Header */}
       <header className="bg-card border-b border-border py-6 px-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
