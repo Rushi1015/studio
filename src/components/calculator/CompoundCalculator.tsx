@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { calculateCompoundInterest, formatCurrency } from "@/lib/calculator-utils";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Calculator, BarChart3, Save, History, Trash2, Calendar } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
@@ -228,21 +228,22 @@ export default function CompoundCalculator() {
             <CardDescription>Wealth accumulation through the power of compounding</CardDescription>
           </CardHeader>
           <CardContent className="h-[400px]">
-            <ChartContainer config={{
-              wealth: { label: "Total Wealth", color: "hsl(var(--primary))" },
-              investment: { label: "Principal", color: "hsl(var(--secondary))" }
-            }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={result.yearlyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                  <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" radius={[0, 0, 0, 0]} isAnimationActive={true} />
-                  <Bar dataKey="wealth" stackId="b" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} isAnimationActive={true} />
-                  <Legend verticalAlign="top" height={36}/>
-                </BarChart>
-              </ResponsiveContainer>
+            <ChartContainer 
+              config={{
+                wealth: { label: "Total Wealth", color: "hsl(var(--primary))" },
+                investment: { label: "Principal", color: "hsl(var(--secondary))" }
+              }}
+              className="aspect-auto h-full w-full"
+            >
+              <BarChart data={result.yearlyData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="investment" stackId="a" fill="hsl(var(--secondary))" radius={[0, 0, 0, 0]} isAnimationActive={true} />
+                <Bar dataKey="wealth" stackId="b" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} isAnimationActive={true} />
+                <Legend verticalAlign="top" height={36}/>
+              </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>

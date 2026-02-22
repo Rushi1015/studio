@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { calculateSIP, formatCurrency } from "@/lib/calculator-utils";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { TrendingUp, Wallet, Save, History, Trash2, Calendar } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
@@ -213,49 +213,50 @@ export default function SipCalculator() {
             </CardTitle>
             <CardDescription>Visualizing your wealth growth over {numericYears} years</CardDescription>
           </CardHeader>
-          <CardContent className="h-[350px]">
-            <ChartContainer config={{
-              wealth: { label: "Total Wealth", color: "hsl(var(--primary))" },
-              investment: { label: "Total Investment", color: "hsl(var(--secondary))" }
-            }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={result.yearlyData}>
-                  <defs>
-                    <linearGradient id="colorWealth" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                  <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="wealth" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={4} 
-                    fillOpacity={1} 
-                    fill="url(#colorWealth)"
-                    isAnimationActive={true}
-                    animationDuration={1500}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="investment" 
-                    stroke="hsl(var(--secondary))" 
-                    strokeWidth={4} 
-                    fillOpacity={1} 
-                    fill="url(#colorInvestment)"
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          <CardContent className="h-[400px]">
+            <ChartContainer 
+              config={{
+                wealth: { label: "Total Wealth", color: "hsl(var(--primary))" },
+                investment: { label: "Total Investment", color: "hsl(var(--secondary))" }
+              }}
+              className="aspect-auto h-full w-full"
+            >
+              <AreaChart data={result.yearlyData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorWealth" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="wealth" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={4} 
+                  fillOpacity={1} 
+                  fill="url(#colorWealth)"
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="investment" 
+                  stroke="hsl(var(--secondary))" 
+                  strokeWidth={4} 
+                  fillOpacity={1} 
+                  fill="url(#colorInvestment)"
+                  isAnimationActive={true}
+                  animationDuration={1000}
+                />
+              </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>

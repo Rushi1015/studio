@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -7,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { calculateSWP, formatCurrency } from "@/lib/calculator-utils";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { HandCoins, ChartBarIncreasing, Save, History, Trash2, Calendar } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
@@ -239,38 +240,39 @@ export default function SwpCalculator() {
             <CardDescription>Monitoring your investment balance while withdrawing</CardDescription>
           </CardHeader>
           <CardContent className="h-[400px]">
-            <ChartContainer config={{
-              balance: { label: "Remaining Balance", color: "hsl(var(--primary))" },
-              withdrawn: { label: "Total Withdrawn", color: "hsl(var(--secondary))" }
-            }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={result.yearlyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                  <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="balance" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={4} 
-                    fillOpacity={0.2} 
-                    fill="hsl(var(--primary))" 
-                    isAnimationActive={true}
-                    animationDuration={1500}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="withdrawn" 
-                    stroke="hsl(var(--secondary))" 
-                    strokeWidth={4} 
-                    fillOpacity={0.1} 
-                    fill="hsl(var(--secondary))" 
-                    isAnimationActive={true}
-                    animationDuration={1000}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <ChartContainer 
+              config={{
+                balance: { label: "Remaining Balance", color: "hsl(var(--primary))" },
+                withdrawn: { label: "Total Withdrawn", color: "hsl(var(--secondary))" }
+              }}
+              className="aspect-auto h-full w-full"
+            >
+              <AreaChart data={result.yearlyData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))'}} tickFormatter={(v) => `₹${v/100000}L`} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="balance" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={4} 
+                  fillOpacity={0.2} 
+                  fill="hsl(var(--primary))" 
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="withdrawn" 
+                  stroke="hsl(var(--secondary))" 
+                  strokeWidth={4} 
+                  fillOpacity={0.1} 
+                  fill="hsl(var(--secondary))" 
+                  isAnimationActive={true}
+                  animationDuration={1000}
+                />
+              </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>
