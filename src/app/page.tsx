@@ -6,7 +6,7 @@ import SipCalculator from "@/components/calculator/SipCalculator";
 import SwpCalculator from "@/components/calculator/SwpCalculator";
 import CompoundCalculator from "@/components/calculator/CompoundCalculator";
 import AuthDialog from "@/components/auth/AuthDialog";
-import { LineChart, BarChart2, Calculator, ShieldCheck, TrendingUp, Wallet, HandCoins, Info } from "lucide-react";
+import { LineChart, BarChart2, Calculator, TrendingUp, HandCoins } from "lucide-react";
 
 export default function Home() {
   return (
@@ -33,7 +33,7 @@ export default function Home() {
         {/* Intro Section */}
         <section className="mb-12 text-center md:text-left animate-in fade-in slide-in-from-left-8 duration-1000">
           <h2 className="text-3xl md:text-5xl font-extrabold font-headline mb-6 tracking-tight">
-            Master Your <span className="text-primary relative inline-block">
+            Plan your <span className="text-primary relative inline-block">
               Financial Future
               <svg className="absolute -bottom-3 left-0 w-full h-3 overflow-visible" viewBox="0 0 100 12" preserveAspectRatio="none">
                 <path 
